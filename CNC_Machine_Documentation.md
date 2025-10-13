@@ -25,6 +25,53 @@ This document provides an overview of the InMotion CNC machine's hardware and so
     *   `G53`: Move in machine coordinate system.
 *   **Coolant:** `M7` for air, `M8` for mist, `M9` to turn off.
 
+### User Interface and Workflow
+
+- **Tabs Overview**
+  - Jobs Manager, Controls, and Preview are the main tabs for day-to-day use.
+
+- **Jobs Manager**
+  - Lists jobs stored on the machine’s SSD. Supports search, sort (e.g., by size, upload date, name), download, and delete.
+  - Renaming opens a custom on-screen keyboard automatically. It supports special characters, case toggle, delete, space, and close.
+  - USB auto-import: when a USB is plugged in, a file picker pops up to upload selected files directly into the Jobs list.
+
+- **Preview**
+  - Shows toolpaths for the selected job. You can pan, zoom, and tilt to inspect paths. It does not display machine position.
+
+- **Controls Tab**
+  - Jogging: set step size per-axis; X and Y steps can be locked together or edited independently. Speed modes: slow, normal, fast.
+  - Return to Zero returns in X/Y only (keeps current Z for safety).
+  - Z moves require caution because the controller doesn’t know actual tool length unless properly set.
+  - Many controls (zeroing, tool pick, job management) are disabled while a job is running; only Pause/Stop and overrides remain.
+
+- **Coordinates Panel**
+  - Machine coordinates are absolute and repeatable across power cycles (after homing).
+  - Job coordinates are relative to the current work zero. You can manually set offsets via the coordinate fields.
+  - Tip: take a photo of machine coordinates for later recovery of a physical position.
+
+- **Homing, Alarms, and Resets**
+  - On startup, enable the motor drivers (green button), wait a few seconds for drivers/fans to come up, then retry homing.
+  - If an alarm persists, use Unlock; combine with Software Reset when needed.
+  - Soft limits prevent out-of-range moves; X travel limit is 1000 mm. Max rapid is 7000 mm/min.
+
+- **Overrides During a Job**
+  - Feed rate and spindle RPM can be adjusted live via overrides. Feed override up to 130% for safety limits; you can restore defaults anytime.
+  - Pausing a job keeps the spindle ON; lower the brushes only when paused and after visually confirming conditions.
+
+- **Tool Change Behavior and Safety**
+  - Brushes automatically raise before a tool change to avoid collisions.
+  - Motion order during tool change: move to a safe Y first, then X, to avoid colliding with adjacent tools.
+  - Tool change is a critical sequence; you cannot modify speed mid-change. You may Stop/Pause, but the tool is only committed at the last position.
+  - The machine does not sense tool presence; if you manually insert/remove a tool, update the controller using `GFT T<number>` (use `GFT T0` for no tool) to prevent incorrect assumptions.
+  - Starting a toolchanger job with no tool will trigger automatic pickup of the first required tool per the program.
+
+- **Spindle and Timing**
+  - Spindle max: 24,000 RPM; spin-up from 0 to max takes ~12 seconds.
+  - Toolchange sequences budget time to stop the spindle before picking/placing tools. CAM post-processors may not wait for spin-up at job start; add dwell/startup logic if needed.
+
+- **Logs and Debugger**
+  - On errors, an Open Debugger link can show recent controller commands and machine status. Logs can be downloaded for diagnostics.
+
 ### Automatic Tool Changer
 
 *   **Pneumatic System:** Enable with `GP1`, disable with `GP0`. Check status with `GPC`.
@@ -149,3 +196,9 @@ If you try to use a coolant command when the pneumatic system is disabled (`GP0`
     2.  Close the application window (you may need to use `Alt+F4`).
     3.  The application is configured to restart automatically after being closed.
 *   **Position Loss:** If you need to restart the machine, take a picture of the work coordinates on the screen beforehand so you can manually return to the same position using the `G53` command.
+*   **Startup/Homing Fails:** Enable motor drivers (green button) and wait a few seconds before retrying homing. If alarms persist, use Unlock and, if necessary, Software Reset.
+*   **Pause Behavior:** Pausing does not stop the spindle. Only lower the brushes when paused and never during a tool change.
+*   **Out-of-Range Moves:** Soft limits prevent overshoot. If a move is rejected (e.g., beyond 1000 mm X travel), reduce the commanded distance or jog back within range.
+*   **Tool Presence Mismatch:** The controller cannot detect tools. If a tool is manually inserted/removed, correct the state with `GFT T<number>` or `GFT T0` to avoid collisions.
+*   **USB File Import:** If the file picker does not appear after inserting a USB, reinsert the drive or upload via the Jobs Manager manually.
+*   **Slow Spindle Start:** Allow ~12 seconds for the spindle to reach commanded RPM; consider adding a dwell at job start if your CAM post does not account for spin-up.
