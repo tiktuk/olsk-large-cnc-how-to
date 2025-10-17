@@ -202,3 +202,13 @@ If you try to use a coolant command when the pneumatic system is disabled (`GP0`
 *   **Tool Presence Mismatch:** The controller cannot detect tools. If a tool is manually inserted/removed, correct the state with `GFT T<number>` or `GFT T0` to avoid collisions.
 *   **USB File Import:** If the file picker does not appear after inserting a USB, reinsert the drive or upload via the Jobs Manager manually.
 *   **Slow Spindle Start:** Allow ~12 seconds for the spindle to reach commanded RPM; consider adding a dwell at job start if your CAM post does not account for spin-up.
+
+### Universal Gcode Sender (UGS)
+
+- **Compatibility:** It is possible to use [UGS](https://github.com/winder/Universal-G-Code-Sender) with the CNC, but tool change functionality and hydraulics may not work. Therefore, it is not recommended for normal operation.
+- **Method A — From the machine screen:**
+  - Press `F11` to exit full-screen and show the OS desktop (OLOS windowed).
+  - Stop the OLOS service so it releases the serial port: `sudo service OLOS stop` (verify the exact command in the shell history).
+- **Method B — Direct USB from a PC:**
+  - Disconnect the existing USB cable from the controller to the machine computer.
+  - Connect your own USB cable from the controller directly to your PC (a long cable is typically required).
